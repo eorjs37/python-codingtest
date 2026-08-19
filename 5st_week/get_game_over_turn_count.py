@@ -18,54 +18,59 @@ start_horse_location_and_directions = [
 dr = [0, 0, -1, 1]
 dc = [1, -1, 0, 0]
 
+def get_d_index_when_go_back(d):
+    if d % 2 == 0:
+        return d+1
+    else:
+        return d-1
 
 def get_game_over_turn_count(horse_count, game_map, horse_location_and_directions = []):
+    n = len(game_map)
+    turn_count = 1
+    current_stacked_horse_map = [[[] for _ in range(n)] for _ in range(n)]
+    for i in range(horse_count):
+        r,c,d = horse_location_and_directions[i]
+        current_stacked_horse_map[r][c].append(i)
 
-    # 가로
-    width = len(game_map)
-    # 세로
-    height = len(game_map[0])
+    while turn_count<=1000:
+        for horse_index in range(horse_count):
+            n = len(game_map)
+            r,c,d = horse_location_and_directions[horse_index]
 
-    # 각 칸에 배열을 만든다.
-    # 각 칸에 말이 쌓이면 말번호/행/열/이동방향
-    visited =[]
-    for i in range(len(game_map)):
-        visited.append([])
-        for sub_index in range(len(game_map[i])):
-            visited[i].append([])
+            new_r = r + dr[d]
+            new_c = c + dc[d]
 
+            # 파란색인 경우에는 말의 이동방향을 반대로 하고 한칸 이동한다
+            if not 0 <= new_r < n or not 0 <= new_c < n or game_map[new_r][new_c] == 2:
+                new_d = get_d_index_when_go_back(d)
 
-    # 깊이? 너비? 우선탐색
-    # 최대 1000판
-    # for i in range(0,1000):
-    #     print(i)
+                horse_location_and_directions[horse_index][2] = new_d
+                new_r = r + dr[new_d]
+                new_c = c + dc[new_d]
+                # 3) 방향을 반대로 바꾼 후에 이동하려는 칸이 파란색인 경우에는 이동하지 않고 가만히 있는다.
+                if not 0 <= new_r < n or not 0 <= new_c < n or game_map[new_r][new_c] == 2:
+                    continue
 
-    # horse_location_and_directions 만큼 반복한다
-    # 행, 열의 인덱스, 이동 방향
-    # 이동 방향은 0, 1, 2, 3 이고 0부터 순서대로 →, ←, ↑, ↓
-    # 각 정수는 칸의 색을 의미한다. 0은 흰색, 1은 빨간색, 2는 파란색이다.
+            moving_horse_index_array = []
 
-    # 1턴
-    for item in horse_location_and_directions:
-        row,col,direction = item
-        mr = row + dr[direction]
-        mc = col + dc[direction]
+            for i in range(len(current_stacked_horse_map[r][c])):
+                current_stacked_horse_index = current_stacked_horse_map[r][c][i]
+                if horse_index == current_stacked_horse_index:
+                    moving_horse_index_array = current_stacked_horse_map[r][c][i:]
+                    current_stacked_horse_map[r][c] = current_stacked_horse_map[r][c][:i]
+                    break
 
+            if game_map[new_r][new_c] == 1:
+                moving_horse_index_array = reversed(moving_horse_index_array)
 
-        if mr >= width or mc >= height or mr<0 or mc<0:
-            continue
+            for moving_horse_index in moving_horse_index_array:
+                current_stacked_horse_map[new_r][new_c].append(moving_horse_index)
+                horse_location_and_directions[moving_horse_index][0], horse_location_and_directions[moving_horse_index][
+                    1] = new_r, new_c
 
-        space = game_map[mr][mc]
-
-        if space == 0:
-            visited[mr][mc].append([mr,mc,direction])
-            print("하얀색")
-        elif space == 1:
-            print("빨간색")
-        else:
-            print("파란색")
-
-    print(visited)
+            if len(current_stacked_horse_map[new_r][new_c]) >= 4:
+                return turn_count
+        turn_count += 1
     return -1
 
 
