@@ -28,8 +28,11 @@ def get_game_over_turn_count(horse_count, game_map, horse_location_and_direction
     n = len(game_map)
 
     turn_count = 1
-
-    # N X N 배열
+    # horse_count: 말 개수
+    # game_map : 게임맵
+    # horse_location_and_directions: 말의 행/열/방향
+    # current_stacked_horse_map: 위치마다 말을 stack으로 쌓는 형태
+    # 동(0) -> 서(1) -> 북(2) -> 남(3)
     current_stacked_horse_map = [[[] for _ in range(n)] for _ in range(n)]
 
     # current_stacked_horse_map 에 위치시켜주기
@@ -45,16 +48,29 @@ def get_game_over_turn_count(horse_count, game_map, horse_location_and_direction
         new_r = r + dr[d]
         new_c = c + dc[d]
 
+        # 파란색의 경우
+        if not 0 <= new_r <n or not 0 <= new_c < n or game_map[new_r][new_c] == 2:
+
+            continue
+
         moving_horse_index_array = []
 
         for i in range(len(current_stacked_horse_map[r][c])):
             current_stacked_horse_index = current_stacked_horse_map[r][c][i]
-            # 여기서 이동해야 하는 애들은 현재 옮기는 말 위의!!! 말들이다.
-            if horse_index == current_stacked_horse_index:
+            if current_stacked_horse_index == horse_index:
+                # 이동할려는 말들의 모음이다
                 moving_horse_index_array = current_stacked_horse_map[r][c][i:]
                 current_stacked_horse_map[r][c] = current_stacked_horse_map[r][c][:i]
                 break
 
+        # 이동할려는 칸이 빨간색인 경우
+        if game_map[new_r][new_c] == 1:
+            moving_horse_index_array = reversed(moving_horse_index_array)
+
+        for moving_horse_index in moving_horse_index_array:
+            current_stacked_horse_map[new_r][new_c].append(moving_horse_index)
+            # 말 위치 업데이트
+            horse_location_and_directions[moving_horse_index] = [new_r, new_c, d]
     while turn_count<=1000:
         turn_count+=1
 
